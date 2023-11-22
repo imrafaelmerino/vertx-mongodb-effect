@@ -1,13 +1,5 @@
 <img src="./logo/package_twitter_swe2n4mg/black/full/coverphoto/black_logo_white_background.png" alt="vertx-mongodb-effect"/>
 
-[![Build Status](https://travis-ci.com/imrafaelmerino/vertx-mongodb-effect.svg?branch=master)](https://travis-ci.com/imrafaelmerino/vertx-mongodb-effect)
-[![codecov](https://codecov.io/gh/imrafaelmerino/vertx-mongodb-effect/branch/master/graph/badge.svg)](https://codecov.io/gh/imrafaelmerino/vertx-mongodb-effect)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=imrafaelmerino_vertx-mongodb-effect&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=imrafaelmerino_vertx-mongodb-effect)
-
-[![Javadocs](https://www.javadoc.io/badge/com.github.imrafaelmerino/vertx-mongodb-effect.svg)](https://www.javadoc.io/doc/com.github.imrafaelmerino/vertx-mongodb-effect)
-[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/vertx-mongodb-effect/1.1.0)](https://search.maven.org/artifact/com.github.imrafaelmerino/vertx-mongodb-effect/1.1.0/jar)
-[![](https://jitpack.io/v/imrafaelmerino/vertx-mongodb-effect.svg)](https://jitpack.io/#imrafaelmerino/vertx-mongodb-effect)
-
 - [Introduction](#introduction)
 - [Supported types](#types)
 - [Supported operations](#operations)

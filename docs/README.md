@@ -17,10 +17,12 @@
 ## <a name="introduction"><a/> Introduction
 
 **vertx-mongodb-effect** allows us to work with **MongoDB** following a purely functional and reactive style.
-It requires to be familiar with [vertx-effect](https://vertx.effect.imrafaelmerino.dev/#modules). Both
+It requires to be familiar with [vertx-effect](https://github.com/imrafaelmerino/vertx-effect). Both
 **vertx-effect** and **vertx-mongo-effect** use the immutable and persistent Json from 
 [json-values](https://github.com/imrafaelmerino/json-values). **Jsons travel across the event bus, 
 from verticle to verticle, back and forth, without being neither copied nor converted to BSON**.
+The vertx codecs to send the Json from json-values to the event bus are in [vertx-values](https://github.com/imrafaelmerino/vertx-values),
+which is a dependency of vertx-effect. 
  
 ## <a name="types"><a/> Supported types
 **json-values** supports the standard Json types: string, number, null, object, array; 
@@ -28,11 +30,11 @@ There are five number specializations: int, long, double, decimal, and BigIntege
 **json-values adds support for instants and binary data**. It serializes Instants into 
 its string representation according to ISO-8601, and the binary type into a string encoded in base 64. 
 
-**vertx-mongodb-effect** uses [mongo-values](https://mongo.values.imrafaelmerino.dev). 
+**vertx-mongodb-effect** uses [mongo-values](https://github.com/imrafaelmerino/mongo-values). 
 It abstracts the processes of encoding to BSON and decoding from BSON. 	
 Please find below the BSON types supported and their equivalent types in json-values.
 
-```java    
+```code    
 
 Map<BsonType, Class<?>> map = new HashMap<>();
 map.put(BsonType.NULL, JsNull.class);
@@ -51,7 +53,7 @@ map.put(BsonType.STRING, JsStr.class);
 
 When defining the mongodb settings, **you have to specify the codec registry _JsValuesRegistry_ from mongo-values**:
 
-```java
+```code
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import mongovalues.JsValuesRegistry;
@@ -76,7 +78,7 @@ Please find below the types and constructors of the most essentials operations:
 
 **Count :: Lambdac<JsObj, Long>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CountOptions;
 
@@ -87,7 +89,7 @@ public Count(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **DeleteMany :: Lambdac<JsObj, O>**
  
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.result.DeleteResult;
@@ -101,7 +103,7 @@ public DeleteMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
     
 **DeleteOne :: Lambdac<JsObj, O>**
     
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.result.DeleteResult;
@@ -116,7 +118,7 @@ public DeleteOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
 **FindAll :: Lambdac<FindMessage, JsArray>**
 
     
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.FindIterable;
 
@@ -127,7 +129,7 @@ public FindAll(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **FindOne :: Lambdac<FindMessage, JsObj>**
     
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.FindIterable;
 
@@ -138,7 +140,7 @@ public FindOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **FindOneAndDelete :: Lambdac<JsObj, JsObj>**
     
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 
@@ -149,7 +151,7 @@ public FindOneAndDelete(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **FindOneAndReplace :: Lambdac<UpdateMessage, JsObj>**
     
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 
@@ -160,7 +162,7 @@ public FindOneAndReplace(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **FindOneAndUpdate :: Lambdac<UpdateMessage, JsObj>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 
@@ -171,7 +173,7 @@ public FindOneAndUpdate(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **InsertMany :: Lambdac<JsArray, R>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.InsertManyResult;
 import com.mongodb.client.model.InsertManyOptions;
@@ -184,7 +186,7 @@ public InsertMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **InsertOne :: Lambdac<JsObj, R>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.model.InsertOneOptions;
@@ -197,7 +199,7 @@ public InsertOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **ReplaceOne :: Lambdac<UpdateMessage, O>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.model.ReplaceOptions;
@@ -209,7 +211,7 @@ public ReplaceOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
 ```    
 **UpdateMany :: Lambdac<UpdateMessage, O>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.model.UpdateOptions
@@ -222,7 +224,7 @@ public UpdateMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
 
 **UpdateOne :: Lambdac<UpdateMessage, O>**
 
-```java
+```code
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.client.model.UpdateOptions
@@ -244,7 +246,7 @@ The following modules are just a couple of examples.
 
 We create a module where all the lambdas make read operations and spawn verticles to reach a significant level of parallelization:
 
-```java
+```code
 import vertx.mongodb.effect.MongoModule;
 import vertx.effect.Lambdac;
 
@@ -289,7 +291,7 @@ We create a module where all the lambdas make delete, insert and update operatio
 instance per verticle. 
 
 
-```java
+```code
 import vertx.mongodb.effect.MongoModule;
 import vertx.effect.Lambdac;
 
@@ -354,7 +356,7 @@ Remember that you can't send any message to the event bus. If a message is not s
 create a _MessageCodec_.
 
 
-```java
+```code
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import vertx.mongodb.effect.MongoVertxClient;
@@ -404,7 +406,7 @@ Quadruple.sequential(vertxRef.deployVerticle(new RegisterJsValuesCodecs()),
 
 Once everything is up and running, enjoy your lambdas!
 
-```java
+```code
 
 BiFunction<Integer,String,Val<Optional<JsObj>>> findByCode = (attempts,code) ->
           MyCollectionModule.findOne

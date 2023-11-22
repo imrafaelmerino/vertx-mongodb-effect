@@ -19,6 +19,8 @@
 - [Installation](#installation)
 - [Release process](#release)
 
+[![Maven](https://img.shields.io/maven-central/v/com.github.imrafaelmerino/vertx.mongodb.effect/2.0.0)](https://search.maven.org/artifact/com.github.imrafaelmerino/vertx.mongodb.effect/2.0.0/jar)
+
 
 ## <a name="introduction"><a/> Introduction
 
@@ -80,7 +82,7 @@ Since **vertx-mongodb-effect** uses the driver API directly, it can benefit from
 
 Please find below the types and constructors of the most essentials operations:
 
-**Count :: λc<JsObj, Long>**
+**Count :: Lambdac<JsObj, Long>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -91,7 +93,7 @@ public Count(Supplier<MongoCollection<JsObj>> collectionSupplier,
             )
 ```
 
-**DeleteMany :: λc<JsObj, O>**
+**DeleteMany :: Lambdac<JsObj, O>**
  
 ```java
 import com.mongodb.client.MongoCollection;
@@ -105,7 +107,7 @@ public DeleteMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
                       
 ```   
     
-**DeleteOne :: λc<JsObj, O>**
+**DeleteOne :: Lambdac<JsObj, O>**
     
 ```java
 import com.mongodb.client.MongoCollection;
@@ -119,7 +121,7 @@ public DeleteOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
                       
 ```
 
-**FindAll :: λc<FindMessage, JsArray>**
+**FindAll :: Lambdac<FindMessage, JsArray>**
 
     
 ```java
@@ -131,7 +133,7 @@ public FindAll(Supplier<MongoCollection<JsObj>> collectionSupplier,
               )
 ```    
 
-**FindOne :: λc<FindMessage, JsObj>**
+**FindOne :: Lambdac<FindMessage, JsObj>**
     
 ```java
 import com.mongodb.client.MongoCollection;
@@ -142,7 +144,7 @@ public FindOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
               )                 
 ```    
 
-**FindOneAndDelete :: λc<JsObj, JsObj>**
+**FindOneAndDelete :: Lambdac<JsObj, JsObj>**
     
 ```java
 import com.mongodb.client.MongoCollection;
@@ -153,7 +155,7 @@ public FindOneAndDelete(Supplier<MongoCollection<JsObj>> collectionSupplier,
                        ) 
 ```   
 
-**FindOneAndReplace :: λc<UpdateMessage, JsObj>**
+**FindOneAndReplace :: Lambdac<UpdateMessage, JsObj>**
     
 ```java
 import com.mongodb.client.MongoCollection;
@@ -164,7 +166,7 @@ public FindOneAndReplace(Supplier<MongoCollection<JsObj>> collectionSupplier,
                         )   
 ```    
 
-**FindOneAndUpdate :: λc<UpdateMessage, JsObj>**
+**FindOneAndUpdate :: Lambdac<UpdateMessage, JsObj>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -175,7 +177,7 @@ public FindOneAndUpdate(Supplier<MongoCollection<JsObj>> collectionSupplier,
                        )
 ```    
 
-**InsertMany :: λc<JsArray, R>**
+**InsertMany :: Lambdac<JsArray, R>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -188,7 +190,7 @@ public InsertMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
                  )   
 ```    
 
-**InsertOne :: λc<JsObj, R>**
+**InsertOne :: Lambdac<JsObj, R>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -201,7 +203,7 @@ public InsertOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
                 )    
 ```    
 
-**ReplaceOne :: λc<UpdateMessage, O>**
+**ReplaceOne :: Lambdac<UpdateMessage, O>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -213,7 +215,7 @@ public ReplaceOne(Supplier<MongoCollection<JsObj>> collectionSupplier,
                   ReplaceOptions options
                  )   
 ```    
-**UpdateMany :: λc<UpdateMessage, O>**
+**UpdateMany :: Lambdac<UpdateMessage, O>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -226,7 +228,7 @@ public UpdateMany(Supplier<MongoCollection<JsObj>> collectionSupplier,
                  )
 ```    
 
-**UpdateOne :: λc<UpdateMessage, O>**
+**UpdateOne :: Lambdac<UpdateMessage, O>**
 
 ```java
 import com.mongodb.client.MongoCollection;
@@ -252,7 +254,7 @@ We create a module where all the lambdas make read operations and spawn verticle
 
 ```java
 import vertx.mongodb.effect.MongoModule;
-import vertx.effect.λc;
+import vertx.effect.Lambdac;
 
 public class ReadModule extends MongoModule {
 
@@ -260,17 +262,17 @@ public class ReadModule extends MongoModule {
         super(collection);
     }
 
-    public static λc<FindMessage, Optional<JsObj>> findOne;
-    public static λc<FindMessage, JsArray> findAll;
-    public static λc<JsObj, Long> count;
-    public static λc<JsArray, JsArray> aggregate;
+    public static Lambdac<FindMessage, Optional<JsObj>> findOne;
+    public static Lambdac<FindMessage, JsArray> findAll;
+    public static Lambdac<JsObj, Long> count;
+    public static Lambdac<JsArray, JsArray> aggregate;
 
     @Override
     protected void deploy() {}  
 
     @Override
     protected void initialize() {
-        λc<FindMessage, JsObj> findOneLambda = vertxRef.spawn("find_one",
+        Lambdac<FindMessage, JsObj> findOneLambda = vertxRef.spawn("find_one",
                                                              new FindOne(collection)
                                                             );
         this.findOne = (context,message) -> findOneLambda.apply(context,message)
@@ -297,7 +299,7 @@ instance per verticle.
 
 ```java
 import vertx.mongodb.effect.MongoModule;
-import vertx.effect.λc;
+import vertx.effect.Lambdac;
 
 public class MyCollectionModule extends MongoModule {
 
@@ -305,10 +307,10 @@ public class MyCollectionModule extends MongoModule {
         super(collection);
     }
 
-    public static λc<JsObj, String> insertOne;
-    public static λc<JsObj, JsObj> deleteOne;
-    public static λc<UpdateMessage, JsObj> replaceOne;
-    public static λc<UpdateMessage, JsObj> updateOne;
+    public static Lambdac<JsObj, String> insertOne;
+    public static Lambdac<JsObj, JsObj> deleteOne;
+    public static Lambdac<UpdateMessage, JsObj> replaceOne;
+    public static Lambdac<UpdateMessage, JsObj> updateOne;
 
     @Override
     protected void deploy() {
@@ -430,7 +432,7 @@ BiFunction<Integer,String,Val<Optional<JsObj>>> findByCode = (attempts,code) ->
 
 Since **vertx-effect** publishes the most critical events into the address **vertx-effect-events**, 
 it' possible to register consumers to explode that information. You can disable this feature 
-with the Java system property **-Dpublish.events=false**. Thanks to λc, it's possible to correlate
+with the Java system property **-Dpublish.events=false**. Thanks to Lambdac, it's possible to correlate
 different events that belongs to the same transaction.
 Go to the [vertx-effect doc](https://vertx.effect.imrafaelmerino.dev/#events) for further details.
 
@@ -451,24 +453,24 @@ Fields of a verticle message event:
 
 ## <a name="requirements"><a/> Requirements 
 
-   -  Java 11 or greater
-   -  [vertx-effect](https://vertx.effect.imrafaelmerino.dev)
+   -  Java 17 or greater
+   -  [vertx-effect](https://github.com/imrafaelmerino/vertx-effect)
    -  [mongo driver sync](https://mongodb.github.io/mongo-java-driver/4.1/whats-new/)
    -  [Mongo values](https://github.com/imrafaelmerino/mongo-values)
 
 ## <a name="installation"><a/> Installation 
+
 ```xml
+
 <dependency>
    <groupId>com.github.imrafaelmerino</groupId>
    <artifactId>vertx-mongodb-effect</artifactId>
-   <version>1.1.0</version>
+   <version>2.0.0</version>
 </dependency>
+
 ```
 
-## <a name="release"><a/> Release process 
-Every time a tagged commit is pushed into master, a Travis CI build will be triggered automatically and 
-start the release process, deploying to Maven repositories and GitHub Releases. See the Travis conf file 
-**.travis.yml** for further details. On the other hand, the master branch is read-only, and all the commits 
-should be pushed to master through pull requests. 
+
+
 
 

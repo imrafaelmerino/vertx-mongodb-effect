@@ -13,21 +13,23 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public class Watcher extends AbstractVerticle {
+public final class Watcher extends AbstractVerticle {
 
     public final Supplier<MongoCollection<JsObj>> collectionSupplier;
     public final Consumer<ChangeStreamIterable<JsObj>> consumer;
     private ClientSession session;
 
     public Watcher(final Supplier<MongoCollection<JsObj>> collectionSupplier,
-                   final Consumer<ChangeStreamIterable<JsObj>> consumer) {
+                   final Consumer<ChangeStreamIterable<JsObj>> consumer
+                  ) {
         this.collectionSupplier = requireNonNull(collectionSupplier);
         this.consumer = requireNonNull(consumer);
     }
 
     public Watcher(final Supplier<MongoCollection<JsObj>> collectionSupplier,
                    final Consumer<ChangeStreamIterable<JsObj>> consumer,
-                   final ClientSession session) {
+                   final ClientSession session
+                  ) {
         this(collectionSupplier,
              consumer
             );

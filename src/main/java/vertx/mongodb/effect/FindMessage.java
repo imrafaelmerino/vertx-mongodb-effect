@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public class FindMessage {
+public final class FindMessage {
 
     public static final String NO_CURSOR_TIMEOUT = "noCursorTimeout";
     public static final String HINT_STRING = "hintString";
@@ -25,10 +25,25 @@ public class FindMessage {
     public static final String SHOW_RECORD_ID = "showRecordId";
     public static final String PARTIAL = "partial";
     public static final String RETURN_KEY = "returnKey";
+    public final JsObj filter;
+    public final JsObj sort;
+    public final JsObj projection;
+    public final JsObj hint;
+    public final JsObj max;
+    public final JsObj min;
+    public final String hintString;
+    public final int skip;
+    public final int limit;
+    public final boolean showRecordId;
+    public final boolean returnKey;
+    public final String comment;
+    public final boolean noCursorTimeout;
+    public final boolean partial;
+    public final int batchSize;
+    public final long maxAwaitTime;
+    public final long maxTime;
 
 
-    @SuppressWarnings({"squid:S107"})
-        //it's private, needed to create a builder. End user will never has to deal with it
     FindMessage(final JsObj filter,
                 final JsObj sort,
                 final JsObj projection,
@@ -45,7 +60,8 @@ public class FindMessage {
                 final boolean partial,
                 final int batchSize,
                 final long maxAwaitTime,
-                final long maxTime) {
+                final long maxTime
+               ) {
         this.filter = requireNonNull(filter);
         this.sort = sort;
         this.projection = projection;
@@ -65,50 +81,26 @@ public class FindMessage {
         this.maxTime = maxTime;
     }
 
-
-    public final JsObj filter;
-
-    public final JsObj sort;
-
-    public final JsObj projection;
-
-    public final JsObj hint;
-
-    public final JsObj max;
-
-    public final JsObj min;
-
-    public final String hintString;
-
-    public final int skip;
-
-    public final int limit;
-
-    public final boolean showRecordId;
-
-    public final boolean returnKey;
-
-    public final String comment;
-
-    public final boolean noCursorTimeout;
-
-    public final boolean partial;
-
-    public final int batchSize;
-
-    public final long maxAwaitTime;
-
-    public final long maxTime;
-
     public static FindMessage ofFilter(final JsObj filter) {
         return new FindMessageBuilder().filter(requireNonNull(filter))
                                        .create();
     }
 
     public static FindMessage ofFilter(final JsObj filter,
-                                       final JsObj projection) {
+                                       final JsObj projection
+                                      ) {
         return new FindMessageBuilder().filter(requireNonNull(filter))
                                        .projection(requireNonNull(projection))
+                                       .create();
+    }
+
+    public static FindMessage ofFilter(final JsObj filter,
+                                       final JsObj projection,
+                                       final JsObj sort
+                                      ) {
+        return new FindMessageBuilder().filter(requireNonNull(filter))
+                                       .projection(requireNonNull(projection))
+                                       .sort(requireNonNull(sort))
                                        .create();
     }
 
@@ -118,36 +110,36 @@ public class FindMessage {
         if (o == null || getClass() != o.getClass()) return false;
         final var that = (FindMessage) o;
         return skip == that.skip &&
-                limit == that.limit &&
-                showRecordId == that.showRecordId &&
-                returnKey == that.returnKey &&
-                noCursorTimeout == that.noCursorTimeout &&
-                partial == that.partial &&
-                batchSize == that.batchSize &&
-                maxAwaitTime == that.maxAwaitTime &&
-                maxTime == that.maxTime &&
-                filter.equals(that.filter) &&
-                Objects.equals(sort,
-                               that.sort
-                              ) &&
-                Objects.equals(projection,
-                               that.projection
-                              ) &&
-                Objects.equals(hint,
-                               that.hint
-                              ) &&
-                Objects.equals(max,
-                               that.max
-                              ) &&
-                Objects.equals(min,
-                               that.min
-                              ) &&
-                Objects.equals(hintString,
-                               that.hintString
-                              ) &&
-                Objects.equals(comment,
-                               that.comment
-                              );
+               limit == that.limit &&
+               showRecordId == that.showRecordId &&
+               returnKey == that.returnKey &&
+               noCursorTimeout == that.noCursorTimeout &&
+               partial == that.partial &&
+               batchSize == that.batchSize &&
+               maxAwaitTime == that.maxAwaitTime &&
+               maxTime == that.maxTime &&
+               filter.equals(that.filter) &&
+               Objects.equals(sort,
+                              that.sort
+                             ) &&
+               Objects.equals(projection,
+                              that.projection
+                             ) &&
+               Objects.equals(hint,
+                              that.hint
+                             ) &&
+               Objects.equals(max,
+                              that.max
+                             ) &&
+               Objects.equals(min,
+                              that.min
+                             ) &&
+               Objects.equals(hintString,
+                              that.hintString
+                             ) &&
+               Objects.equals(comment,
+                              that.comment
+                             );
     }
 
     @Override
@@ -171,16 +163,6 @@ public class FindMessage {
                             maxTime
                            );
     }
-
-    public static FindMessage ofFilter(final JsObj filter,
-                                       final JsObj projection,
-                                       final JsObj sort) {
-        return new FindMessageBuilder().filter(requireNonNull(filter))
-                                       .projection(requireNonNull(projection))
-                                       .sort(requireNonNull(sort))
-                                       .create();
-    }
-
 
     public JsObj toJsObj() {
         var options = JsObj.empty();

@@ -8,16 +8,16 @@ import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import jsonvalues.JsArray;
 import jsonvalues.JsObj;
-import vertx.effect.Val;
-import vertx.effect.λc;
-import vertx.mongodb.effect.Converters;
+import vertx.effect.VIO;
+import vertx.effect.Lambdac;
+import vertx.mongodb.effect.MongoConverters;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public class InsertMany<R> implements λc<JsArray, R> {
+public class InsertMany<R> implements Lambdac<JsArray, R> {
 
 
     private final Supplier<MongoCollection<JsObj>> collectionSupplier;
@@ -43,13 +43,13 @@ public class InsertMany<R> implements λc<JsArray, R> {
 
 
     @Override
-    public Val<R> apply(final MultiMap context,
+    public VIO<R> apply(final MultiMap context,
                         final JsArray message) {
-        if (message == null) return Val.fail(new IllegalArgumentException("message is null"));
+        if (message == null) return VIO.fail(new IllegalArgumentException("message is null"));
 
-        return Val.effect(() -> {
+        return VIO.effect(() -> {
             try {
-                var docs = Converters.jsArray2ListOfJsObj.apply(message);
+                var docs = MongoConverters.jsArray2ListOfJsObj.apply(message);
                 var collection = requireNonNull(collectionSupplier.get());
 
                 return Future.succeededFuture(resultConverter.apply(collection

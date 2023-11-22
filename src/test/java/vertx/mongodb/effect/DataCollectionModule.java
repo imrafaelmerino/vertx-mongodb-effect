@@ -4,15 +4,15 @@ import com.mongodb.client.MongoCollection;
 import io.vertx.core.DeploymentOptions;
 import jsonvalues.JsArray;
 import jsonvalues.JsObj;
-import vertx.effect.λc;
+import vertx.effect.Lambdac;
 import vertx.mongodb.effect.functions.*;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static vertx.mongodb.effect.Converters.*;
+import static vertx.mongodb.effect.MongoConverters.*;
 
-public class DataCollectionModule extends MongoModule {
+public final class DataCollectionModule extends MongoModule {
 
     private static final String DELETE_ONE_ADDRESS = "delete_one";
     private static final String UPDATE_ONE_ADDRESS = "update_one";
@@ -21,20 +21,20 @@ public class DataCollectionModule extends MongoModule {
     private static final String INSERT_MANY_ADDRESS = "insert_all";
     private static final String DELETE_MANY_ADDRESS = "delete_all";
 
-    public λc<JsObj, String> insertOne;
-    public λc<JsObj, JsObj> deleteOne;
-    public λc<JsArray, JsArray> insertMany;
-    public λc<JsObj, JsObj> deleteMany;
-    public λc<FindMessage, Optional<JsObj>> findOne;
-    public λc<FindMessage, JsArray> findAll;
-    public λc<UpdateMessage, JsObj> findOneAndReplace;
-    public λc<UpdateMessage, JsObj> replaceOne;
-    public λc<UpdateMessage, JsObj> updateOne;
-    public λc<JsObj, Long> count;
-    public λc<UpdateMessage, JsObj> updateMany;
-    public λc<JsArray, JsArray> aggregate;
-    public λc<JsObj, JsObj> findOneAndDelete;
-    public λc<UpdateMessage, JsObj> findOneAndUpdate;
+    public Lambdac<JsObj, String> insertOne;
+    public Lambdac<JsObj, JsObj> deleteOne;
+    public Lambdac<JsArray, JsArray> insertMany;
+    public Lambdac<JsObj, JsObj> deleteMany;
+    public Lambdac<FindMessage, Optional<JsObj>> findOne;
+    public Lambdac<FindMessage, JsArray> findAll;
+    public Lambdac<UpdateMessage, JsObj> findOneAndReplace;
+    public Lambdac<UpdateMessage, JsObj> replaceOne;
+    public Lambdac<UpdateMessage, JsObj> updateOne;
+    public Lambdac<JsObj, Long> count;
+    public Lambdac<UpdateMessage, JsObj> updateMany;
+    public Lambdac<JsArray, JsArray> aggregate;
+    public Lambdac<JsObj, JsObj> findOneAndDelete;
+    public Lambdac<UpdateMessage, JsObj> findOneAndUpdate;
 
     public DataCollectionModule(final Supplier<MongoCollection<JsObj>> collection) {
         super(collection);
@@ -46,7 +46,7 @@ public class DataCollectionModule extends MongoModule {
         insertOne = this.trace(INSERT_ONE_ADDRESS);
         insertMany = this.trace(INSERT_MANY_ADDRESS);
         deleteMany = this.trace(DELETE_MANY_ADDRESS);
-        λc<FindMessage, JsObj> findOneLambda = vertxRef.spawn("findOne",
+        Lambdac<FindMessage, JsObj> findOneLambda = vertxRef.spawn("findOne",
                                                               new FindOne(collectionSupplier)
                                                              );
         findOne = (context, message) -> findOneLambda.apply(context,

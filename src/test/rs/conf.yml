@@ -1,0 +1,6 @@
+storage:
+  dbPath: /data/db
+  journal:
+    enabled: true
+replication:
+  replSetName: rs0

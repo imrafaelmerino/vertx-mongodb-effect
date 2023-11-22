@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.Objects.requireNonNull;
 
 
-public class FindMessageBuilder {
+public final class FindMessageBuilder {
     private JsObj filter;
     private JsObj sort;
     private JsObj projection;
@@ -63,13 +63,13 @@ public class FindMessageBuilder {
     }
 
     public FindMessageBuilder skip(final int skip) {
-        if(skip<0)throw new IllegalArgumentException("skip is < 0");
+        if (skip < 0) throw new IllegalArgumentException("skip is < 0");
         this.skip = skip;
         return this;
     }
 
     public FindMessageBuilder limit(final int limit) {
-        if(limit<0)throw new IllegalArgumentException("limit is < 0");
+        if (limit < 0) throw new IllegalArgumentException("limit is < 0");
         this.limit = limit;
         return this;
     }
@@ -100,21 +100,23 @@ public class FindMessageBuilder {
     }
 
     public FindMessageBuilder batchSize(final int batchSize) {
-        if(batchSize<0)throw new IllegalArgumentException("batchSize is < 0");
+        if (batchSize < 0) throw new IllegalArgumentException("batchSize is < 0");
         this.batchSize = batchSize;
         return this;
     }
 
     public FindMessageBuilder maxAwaitTime(final int maxAwaitTime,
-                                           final TimeUnit unit) {
-        if(maxAwaitTime<0)throw new IllegalArgumentException("maxAwaitTime is < 0");
+                                           final TimeUnit unit
+                                          ) {
+        if (maxAwaitTime < 0) throw new IllegalArgumentException("maxAwaitTime is < 0");
         this.maxAwaitTime = requireNonNull(unit).toMillis(maxAwaitTime);
         return this;
     }
 
     public FindMessageBuilder maxTime(final int maxTime,
-                                      final TimeUnit unit) {
-        if(maxTime<0)throw new IllegalArgumentException("maxTime is < 0");
+                                      final TimeUnit unit
+                                     ) {
+        if (maxTime < 0) throw new IllegalArgumentException("maxTime is < 0");
         this.maxTime = requireNonNull(unit).toMillis(maxTime);
         return this;
     }

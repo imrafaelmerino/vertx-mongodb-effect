@@ -6,11 +6,12 @@ import jsonvalues.JsObj;
 import vertx.mongodb.effect.FindMessage;
 import vertx.mongodb.effect.FindMessageBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static vertx.mongodb.effect.FindMessage.*;
 
-public class FindMessageCodec implements MessageCodec<FindMessage, FindMessage> {
+ final class FindMessageCodec implements MessageCodec<FindMessage, FindMessage> {
 
     public static final FindMessageCodec INSTANCE = new FindMessageCodec();
 
@@ -38,7 +39,7 @@ public class FindMessageCodec implements MessageCodec<FindMessage, FindMessage> 
         var bytes = buffer.getBytes(pos,
                                     pos + length
                                    );
-        var options = JsObj.parse(new String(bytes));
+        var options = JsObj.parse(new String(bytes, StandardCharsets.UTF_8));
 
         var noCursorTimeout = options.getBool(NO_CURSOR_TIMEOUT);
         var partial         = options.getBool(PARTIAL);

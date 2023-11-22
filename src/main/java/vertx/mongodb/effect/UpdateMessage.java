@@ -7,10 +7,9 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 
-public class UpdateMessage {
+public final class UpdateMessage {
     public final JsObj filter;
     public final JsObj update;
-
 
     public UpdateMessage(final JsObj filter,
                          final JsObj update
@@ -27,9 +26,9 @@ public class UpdateMessage {
         return Objects.equals(filter,
                               that.filter
                              ) &&
-                Objects.equals(update,
-                               that.update
-                              );
+               Objects.equals(update,
+                              that.update
+                             );
     }
 
     @Override

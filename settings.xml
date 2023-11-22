@@ -5,17 +5,8 @@
     <servers>
         <server>
             <id>ossrh</id>
-            <username>${env.NEXUS_USERNAME}</username>
-            <password>${env.NEXUS_PASSWORD}</password>
+            <username>imrafaelmerino</username>
+            <password>B4X-pbh-AmS-daF</password>
         </server>
     </servers>
-    <profiles>
-        <profile>
-            <id>release</id>
-            <properties>
-                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-            </properties>
-        </profile>
-    </profiles>
-
 </settings>

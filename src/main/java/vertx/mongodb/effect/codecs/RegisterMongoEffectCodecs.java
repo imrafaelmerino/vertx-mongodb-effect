@@ -5,7 +5,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import vertx.mongodb.effect.FindMessage;
 
-public class RegisterMongoEffectCodecs extends AbstractVerticle {
+public final class RegisterMongoEffectCodecs extends AbstractVerticle {
 
     @Override
     public void start(final Promise<Void> startPromise)  {

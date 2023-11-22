@@ -1,7 +1,7 @@
 package vertx.mongodb.effect.functions;
 
 import com.mongodb.client.MongoCollection;
-import vertx.mongodb.effect.Converters;
+import vertx.mongodb.effect.MongoConverters;
 import jsonvalues.JsArray;
 import jsonvalues.JsObj;
 
@@ -12,7 +12,7 @@ public class FindAll extends Find<JsArray> {
 
     public FindAll(final Supplier<MongoCollection<JsObj>> collectionSupplier) {
         super(collectionSupplier,
-              Converters.findIterable2JsArray
+              MongoConverters.findIterable2JsArray
              );
     }
 

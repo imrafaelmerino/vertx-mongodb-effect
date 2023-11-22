@@ -1,19 +1,21 @@
 package vertx.mongodb.effect.codecs;
 
-import vertx.mongodb.effect.UpdateMessage;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
 import jsonvalues.JsObj;
+import vertx.mongodb.effect.UpdateMessage;
 
-public class UpdateMessageCodec implements MessageCodec<UpdateMessage, UpdateMessage> {
+final class UpdateMessageCodec implements MessageCodec<UpdateMessage, UpdateMessage> {
 
     public static final UpdateMessageCodec INSTANCE = new UpdateMessageCodec();
 
-    private UpdateMessageCodec() {}
+    private UpdateMessageCodec() {
+    }
 
     @Override
     public void encodeToWire(final Buffer buffer,
-                             final UpdateMessage updateMessage) {
+                             final UpdateMessage updateMessage
+                            ) {
         var filter = updateMessage.filter.serialize();
         var update = updateMessage.update.serialize();
         buffer.appendInt(filter.length);
@@ -24,7 +26,8 @@ public class UpdateMessageCodec implements MessageCodec<UpdateMessage, UpdateMes
 
     @Override
     public UpdateMessage decodeFromWire(int pos,
-                                        final Buffer buffer) {
+                                        final Buffer buffer
+                                       ) {
         var filterLength = buffer.getInt(pos);
         pos += 4;
         var updateLength = buffer.getInt(pos);

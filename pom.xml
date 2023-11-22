@@ -6,7 +6,7 @@
     <groupId>com.github.imrafaelmerino</groupId>
     <artifactId>vertx-mongodb-effect</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
     <name>vertx.mongodb.effect</name>
     <description>When actors meet Functional Programming.
     </description>
@@ -30,27 +30,43 @@
     </scm>
 
     <properties>
-        <NEXUS-STAGING-MAVEN-PLUGIN.VERSION>1.6.8</NEXUS-STAGING-MAVEN-PLUGIN.VERSION>
+        <error-prone.version>2.18.0</error-prone.version>
+        <NEXUS-STAGING-MAVEN-PLUGIN.VERSION>1.6.12</NEXUS-STAGING-MAVEN-PLUGIN.VERSION>
         <MAVEN-GPG-PLUGIN.VERSION>1.6</MAVEN-GPG-PLUGIN.VERSION>
-        <JACOCO-MAVEN-PLUGIN.VERSION>0.8.4</JACOCO-MAVEN-PLUGIN.VERSION>
-        <MAVEN-JAVADOC-PLUGIN.VERSION>3.1.1</MAVEN-JAVADOC-PLUGIN.VERSION>
         <MAVEN-SOURCE-PLUGIN.VERSION>3.0.1</MAVEN-SOURCE-PLUGIN.VERSION>
-        <MAVEN-SUREFIRE-PLUGIN.VERSION>3.0.0-M5</MAVEN-SUREFIRE-PLUGIN.VERSION>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <MAVEN-COMPILER-PLUGIN.VERSION>3.1</MAVEN-COMPILER-PLUGIN.VERSION>
-        <MAVEN-COMPILER-PLUGIN.SOURCE>11</MAVEN-COMPILER-PLUGIN.SOURCE>
-        <MAVEN-COMPILER-PLUGIN.TARGET>11</MAVEN-COMPILER-PLUGIN.TARGET>
-        <MONGO-VALUES-VERSION>0.6</MONGO-VALUES-VERSION>
-        <VERTX-EFFECT-VERSION>3.0.0</VERTX-EFFECT-VERSION>
-        <VERTX-TEST-VERSION>4.0.2</VERTX-TEST-VERSION>
-        <JUNIT-JUPITER-ENGINE.VERSION>5.6.2</JUNIT-JUPITER-ENGINE.VERSION>
+        <PROJECT.BUILD.SOURCEENCODING>UTF8</PROJECT.BUILD.SOURCEENCODING>
+        <MAVEN-COMPILER-PLUGIN.VERSION>3.10.1</MAVEN-COMPILER-PLUGIN.VERSION>
+        <MAVEN-SUREFIRE-PLUGIN.VERSION>3.0.0-M6</MAVEN-SUREFIRE-PLUGIN.VERSION>
+        <MAVEN-JAR-PLUGIN.VERSION>3.2.2</MAVEN-JAR-PLUGIN.VERSION>
+        <JAVA-FUN.VERSION>1.4.0</JAVA-FUN.VERSION>
+        <MAVEN-JAVADOC-PLUGIN.VERSION>3.3.2</MAVEN-JAVADOC-PLUGIN.VERSION>
+        <MAVEN-COMPILER-PLUGIN.SOURCE>17</MAVEN-COMPILER-PLUGIN.SOURCE>
+        <MAVEN-COMPILER-PLUGIN.TARGET>17</MAVEN-COMPILER-PLUGIN.TARGET>
+        <VERTX-VERSION>4.5.0</VERTX-VERSION>
+        <VERTX.JSON-VALUES.VERSION>1.0.0</VERTX.JSON-VALUES.VERSION>
+        <JUNIT-JUPITER-ENGINE.VERSION>5.8.2</JUNIT-JUPITER-ENGINE.VERSION>
+        <MONGODB-DRIVER-CORE.VERSION>4.11.1</MONGODB-DRIVER-CORE.VERSION>
+        <MONGODB-DRIVER-SYNC.VERSION>4.11.1</MONGODB-DRIVER-SYNC.VERSION>
+        <VERTX-EFFECT-VERSION>4.0.0</VERTX-EFFECT-VERSION>
         <SLF4J-API.VERSION>1.7.30</SLF4J-API.VERSION>
-        <MONGODB-DRIVER-SYNC.VERSION>4.1.1</MONGODB-DRIVER-SYNC.VERSION>
-        <MAVEN-JAR-PLUGIN.VERSION>3.2.0</MAVEN-JAR-PLUGIN.VERSION>
+        <MONGO-VALUES-VERSION>1.0.3</MONGO-VALUES-VERSION>
+
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${MAVEN-JAR-PLUGIN.VERSION}</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>vertx.mongodb.effect</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -59,25 +75,32 @@
                     <source>${MAVEN-COMPILER-PLUGIN.SOURCE}</source>
                     <target>${MAVEN-COMPILER-PLUGIN.TARGET}</target>
                     <showWarnings>true</showWarnings>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                     <compilerArgs>
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <arg>-Xplugin:ErrorProne</arg>
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${error-prone.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${MAVEN-SUREFIRE-PLUGIN.VERSION}</version>
-                <configuration>
-                    <argLine>-XX:+FlightRecorder -XX:StartFlightRecording=duration=180s,filename=vertx-mongo-effect-recording.jfr</argLine>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${MAVEN-JAVADOC-PLUGIN.VERSION}</version>
                 <configuration>
-                    <source>11</source>
+                    <source>${MAVEN-COMPILER-PLUGIN.SOURCE}</source>
                 </configuration>
                 <executions>
                     <execution>
@@ -95,13 +118,19 @@
         <dependency>
             <groupId>com.github.imrafaelmerino</groupId>
             <artifactId>mongo-values</artifactId>
-            <version>0.5</version>
+            <version>${MONGO-VALUES-VERSION}</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.imrafaelmerino</groupId>
             <artifactId>vertx-effect</artifactId>
             <version>${VERTX-EFFECT-VERSION}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.imrafaelmerino</groupId>
+            <artifactId>vertx-json-values</artifactId>
+            <version>${VERTX.JSON-VALUES.VERSION}</version>
         </dependency>
 
         <dependency>
@@ -114,8 +143,15 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-junit5</artifactId>
-            <version>${VERTX-TEST-VERSION}</version>
+            <version>${VERTX-VERSION}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${MONGODB-DRIVER-SYNC.VERSION}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -132,11 +168,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>${MONGODB-DRIVER-SYNC.VERSION}</version>
-        </dependency>
 
     </dependencies>
     <profiles>
@@ -202,18 +233,6 @@
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>${MAVEN-JAR-PLUGIN.VERSION}</version>
-                        <configuration>
-                            <archive>
-                                <manifestEntries>
-                                    <Automatic-Module-Name>vertx.mongodb.effect</Automatic-Module-Name>
-                                </manifestEntries>
-                            </archive>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>${MAVEN-SOURCE-PLUGIN.VERSION}</version>
                         <executions>
@@ -221,32 +240,6 @@
                                 <id>attach-sources</id>
                                 <goals>
                                     <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>coverage</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${JACOCO-MAVEN-PLUGIN.VERSION}</version>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>report</id>
-                                <goals>
-                                    <goal>report</goal>
                                 </goals>
                             </execution>
                         </executions>

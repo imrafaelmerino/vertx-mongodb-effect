@@ -1,14 +1,14 @@
-package vertx.mongodb.effect;
+package vertx.mongodb.effect.codecs;
 
 
 import io.vertx.core.buffer.Buffer;
 import jsonvalues.JsInt;
 import jsonvalues.JsObj;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import vertx.mongodb.effect.FindMessage;
 import vertx.mongodb.effect.FindMessageBuilder;
 import vertx.mongodb.effect.UpdateMessage;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import vertx.mongodb.effect.codecs.FindMessageCodec;
 import vertx.mongodb.effect.codecs.UpdateMessageCodec;
 
@@ -26,8 +26,8 @@ public class TestCodecs {
         FindMessage message =
                 new FindMessageBuilder().batchSize(1)
                                         .comment("")
-                                        .filter(JsObj.EMPTY)
-                                        .hint(JsObj.EMPTY)
+                                        .filter(JsObj.empty())
+                                        .hint(JsObj.empty())
                                         .hintString("")
                                         .limit(1)
                                         .max(JsObj.empty())
@@ -61,19 +61,19 @@ public class TestCodecs {
         Assertions.assertEquals(message,
                                 identity.apply(message));
 
-        FindMessage a = FindMessage.ofFilter(JsObj.EMPTY);
+        FindMessage a = FindMessage.ofFilter(JsObj.empty());
 
         Assertions.assertEquals(a,
                                 identity.apply(a));
 
-        FindMessage b = FindMessage.ofFilter(JsObj.EMPTY,
-                                             JsObj.EMPTY);
+        FindMessage b = FindMessage.ofFilter(JsObj.empty(),
+                                             JsObj.empty());
         Assertions.assertEquals(b,
                                 identity.apply(b));
 
-        FindMessage c = FindMessage.ofFilter(JsObj.EMPTY,
-                                             JsObj.EMPTY,
-                                             JsObj.EMPTY);
+        FindMessage c = FindMessage.ofFilter(JsObj.empty(),
+                                             JsObj.empty(),
+                                             JsObj.empty());
         Assertions.assertEquals(c,
                                 identity.apply(c));
 
@@ -93,8 +93,8 @@ public class TestCodecs {
 
                 };
 
-        UpdateMessage a = new UpdateMessage(JsObj.EMPTY,
-                                            JsObj.EMPTY);
+        UpdateMessage a = new UpdateMessage(JsObj.empty(),
+                                            JsObj.empty());
 
         Assertions.assertEquals(a,
                                 identity.apply(a));

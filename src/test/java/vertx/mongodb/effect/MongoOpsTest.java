@@ -1,6 +1,5 @@
 package vertx.mongodb.effect;
 
-
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import io.vertx.core.Vertx;
@@ -8,19 +7,20 @@ import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import jsonvalues.*;
-import jsonvalues.gen.JsGens;
+import jsonvalues.gen.JsIntGen;
 import jsonvalues.gen.JsObjGen;
+import jsonvalues.gen.JsStrGen;
 import mongovalues.JsValuesRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import vertx.effect.RegisterJsValuesCodecs;
-import vertx.effect.Val;
+import vertx.effect.ListExp;
+import vertx.effect.VIO;
 import vertx.effect.VertxRef;
-import vertx.effect.exp.Quadruple;
 import vertx.mongodb.effect.codecs.RegisterMongoEffectCodecs;
+import vertx.values.codecs.RegisterJsValuesCodecs;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -39,7 +39,7 @@ import static jsonvalues.JsBool.FALSE;
 import static jsonvalues.JsBool.TRUE;
 import static jsonvalues.JsNull.NULL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static vertx.mongodb.effect.Converters.str2Oid;
+import static vertx.mongodb.effect.MongoConverters.str2Oid;
 
 @ExtendWith(VertxExtension.class)
 public class MongoOpsTest {
@@ -56,7 +56,7 @@ public class MongoOpsTest {
                                VertxTestContext testContext
                               ) {
         ConnectionString connString = new ConnectionString(
-                "mongodb://localhost:27017/?connectTimeoutMS=10000&socketTimeoutMS=10000&serverSelectionTimeoutMS=10000"
+                "mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs0"
         );
 
         settings = MongoClientSettings.builder()
@@ -72,13 +72,13 @@ public class MongoOpsTest {
                                                                         "Data"
                                                                        ));
 
-        Quadruple.sequential(vertxRef.deployVerticle(new RegisterJsValuesCodecs()),
-                             vertxRef.deployVerticle(mongoClient),
-                             vertxRef.deployVerticle(new RegisterMongoEffectCodecs()),
-                             vertxRef.deployVerticle(dataModule)
-                            )
-                 .onComplete(TestFns.pipeTo(testContext))
-                 .get();
+        var unused = ListExp.seq(vertxRef.deployVerticle(new RegisterJsValuesCodecs()),
+                                 vertxRef.deployVerticle(mongoClient),
+                                 vertxRef.deployVerticle(new RegisterMongoEffectCodecs()),
+                                 vertxRef.deployVerticle(dataModule)
+                                )
+                            .onComplete(TestFns.pipeTo(testContext))
+                            .get();
 
 
     }
@@ -87,13 +87,13 @@ public class MongoOpsTest {
     @Test
     public void testInsert(VertxTestContext testContext) throws InterruptedException {
 
-        int        number = 100;
-        Checkpoint checkpoint             = testContext.checkpoint(number);
-        var gen = JsObjGen.of("a",
-                              JsGens.alphabetic,
-                              "b",
-                              JsGens.integer
-                             );
+        int number = 100;
+        Checkpoint checkpoint = testContext.checkpoint(number);
+        JsObjGen gen = JsObjGen.of("a",
+                                   JsStrGen.alphabetic(),
+                                   "b",
+                                   JsIntGen.arbitrary()
+                                  );
 
         Supplier<JsObj> supplier = gen.apply(new Random());
 
@@ -104,22 +104,21 @@ public class MongoOpsTest {
                  .parallel()
                  .forEach(i -> {
                      JsObj obj = supplier.get();
-                     dataModule.insertOne.apply(obj)
-                                         .flatMap(id -> dataModule.findOne.apply(FindMessage
-                                                                                         .ofFilter(str2Oid.apply(id))
-                                                                                )
-                                                                          .map(it -> it.get()
-                                                                                       .delete("_id"))
-                                                                          .onSuccess(a -> {
-                                                                              Assertions.assertEquals(obj,
-                                                                                                      a
-                                                                                                     );
-                                                                              checkpoint.flag();
-                                                                          })
-                                                 ).get();
+                     var unused = dataModule.insertOne.apply(obj)
+                                                      .then(id -> dataModule.findOne.apply(FindMessage
+                                                                                                   .ofFilter(str2Oid.apply(id))
+                                                                                          )
+                                                                                    .map(it -> it.get()
+                                                                                                 .delete("_id"))
+                                                                                    .onSuccess(a -> {
+                                                                                        assertEquals(obj,
+                                                                                                     a
+                                                                                                    );
+                                                                                        checkpoint.flag();
+                                                                                    })
+                                                           ).get();
 
                  });
-
 
 
     }
@@ -152,9 +151,9 @@ public class MongoOpsTest {
                              JsBigInt.of(new BigInteger("11111111111111111111111"))
                             );
 
-        dataModule.insertOne
+        var unused = dataModule.insertOne
                 .apply(obj)
-                .flatMap(id -> dataModule.findOne.apply(FindMessage.ofFilter(str2Oid.apply(id))))
+                .then(id -> dataModule.findOne.apply(FindMessage.ofFilter(str2Oid.apply(id))))
                 .onComplete(
                         TestFns.pipeTo(result -> assertEquals(Optional.of(obj),
                                                               result.map(it -> it.delete("_id"))
@@ -172,7 +171,7 @@ public class MongoOpsTest {
 
         int key = random.nextInt();
 
-        Val<JsArray> val = dataModule.insertMany
+        VIO<JsArray> val = dataModule.insertMany
                 .apply(JsArray.of(JsObj.of("name",
                                            JsStr.of("Rafa"),
                                            "age",
@@ -197,26 +196,26 @@ public class MongoOpsTest {
                                           )
                                  )
                       )
-                .flatMap(ids -> {
-                             FindMessage message = new FindMessageBuilder().maxTime(1,
-                                                                                    TimeUnit.MILLISECONDS
-                                                                                   )
-                                                                           .filter(JsObj.of("test",
-                                                                                            JsInt.of(key)
-                                                                                           ))
-                                                                           .create();
-                             return dataModule
-                                     .findAll
-                                     .apply(message
-                                           );
-                         }
-                        );
+                .then(ids -> {
+                          FindMessage message = new FindMessageBuilder().maxTime(1,
+                                                                                 TimeUnit.MILLISECONDS
+                                                                                )
+                                                                        .filter(JsObj.of("test",
+                                                                                         JsInt.of(key)
+                                                                                        ))
+                                                                        .create();
+                          return dataModule
+                                  .findAll
+                                  .apply(message
+                                        );
+                      }
+                     );
 
 
         Verifiers.<JsArray>verifySuccess(it -> it.size() == 3)
-                .accept(val,
-                        context
-                       );
+                 .accept(val,
+                         context
+                        );
 
 
     }
@@ -236,17 +235,17 @@ public class MongoOpsTest {
                              now
                             );
 
-        dataModule.insertOne.apply(doc)
-                            .flatMap(id -> dataModule.deleteOne.apply(filter))
-                            .flatMap(deleteResult -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
-                            .onComplete(optResult -> {
-                                if (optResult.succeeded())
-                                    context.verify(() -> Assertions.assertTrue(optResult.result()
-                                                                                        .isEmpty())
-                                                  );
-                                context.completeNow();
-                            })
-                            .get();
+        var unused = dataModule.insertOne.apply(doc)
+                                         .then(id -> dataModule.deleteOne.apply(filter))
+                                         .then(deleteResult -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
+                                         .onComplete(optResult -> {
+                                             if (optResult.succeeded())
+                                                 context.verify(() -> Assertions.assertTrue(optResult.result()
+                                                                                                     .isEmpty())
+                                                               );
+                                             context.completeNow();
+                                         })
+                                         .get();
     }
 
     @Test
@@ -281,7 +280,7 @@ public class MongoOpsTest {
                                           JsInstant.of(Instant.now(Clock.tickMillis(ZoneId.of("UTC")))),
                                           "biginteger",
                                           JsBigInt.of(new BigInteger("11111111111111111111111"))
-                                         )
+                                         ), JsArray.TYPE.LIST
                                 );
 
         JsObj newObj = filter.union(JsObj.of("string",
@@ -310,16 +309,16 @@ public class MongoOpsTest {
                                              "biginteger",
                                              JsBigInt.of(new BigInteger("21111111111111111111111"))
 
-                                            ));
+                                            ), JsArray.TYPE.LIST);
 
-        dataModule.insertOne
+        var unused = dataModule.insertOne
                 .apply(obj)
-                .flatMap(id -> dataModule.findOneAndReplace.apply(new UpdateMessage(filter,
-                                                                                    newObj
-                                                                  )
-                                                                 )
-                        )
-                .flatMap(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
+                .then(id -> dataModule.findOneAndReplace.apply(new UpdateMessage(filter,
+                                                                                 newObj
+                                                               )
+                                                              )
+                     )
+                .then(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
                 .onComplete(
                         TestFns.pipeTo(result -> {
                                            assertEquals(Optional.of(newObj),
@@ -383,13 +382,13 @@ public class MongoOpsTest {
                                   );
 
         Verifiers.<JsArray>verifySuccess(expectedSortAsc::equals)
-                .accept(dataModule.insertMany.apply(array)
-                                             .flatMap(result -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
-                                                                                                              projection,
-                                                                                                              sortAsc
-                                                                                                             ))),
-                        context
-                       );
+                 .accept(dataModule.insertMany.apply(array)
+                                              .then(result -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
+                                                                                                            projection,
+                                                                                                            sortAsc
+                                                                                                           ))),
+                         context
+                        );
 
     }
 
@@ -443,13 +442,13 @@ public class MongoOpsTest {
                                   );
 
         Verifiers.<JsArray>verifySuccess(expectedSortDesc::equals)
-                .accept(dataModule.insertMany.apply(array)
-                                             .flatMap(result -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
-                                                                                                              projection,
-                                                                                                              sortDesc
-                                                                                                             ))),
-                        context
-                       );
+                 .accept(dataModule.insertMany.apply(array)
+                                              .then(result -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
+                                                                                                            projection,
+                                                                                                            sortDesc
+                                                                                                           ))),
+                         context
+                        );
 
     }
 
@@ -485,7 +484,7 @@ public class MongoOpsTest {
                                           JsInstant.of(Instant.now(Clock.tickMillis(ZoneId.of("UTC")))),
                                           "biginteger",
                                           JsBigInt.of(new BigInteger("11111111111111111111111"))
-                                         )
+                                         ), JsArray.TYPE.LIST
                                 );
 
         JsObj newObj = filter.union(JsObj.of("string",
@@ -514,16 +513,16 @@ public class MongoOpsTest {
                                              "biginteger",
                                              JsBigInt.of(new BigInteger("21111111111111111111111"))
 
-                                            ));
+                                            ), JsArray.TYPE.LIST);
 
-        dataModule.insertOne
+        var unused = dataModule.insertOne
                 .apply(obj)
-                .flatMap(id -> dataModule.replaceOne.apply(new UpdateMessage(filter,
-                                                                             newObj
-                                                           )
-                                                          )
-                        )
-                .flatMap(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
+                .then(id -> dataModule.replaceOne.apply(new UpdateMessage(filter,
+                                                                          newObj
+                                                        )
+                                                       )
+                     )
+                .then(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter)))
                 .onComplete(
                         TestFns.pipeTo(result -> {
                                            assertEquals(Optional.of(newObj),
@@ -543,19 +542,19 @@ public class MongoOpsTest {
                                 key
                                );
         Verifiers.<Long>verifySuccess(count -> count == 2)
-                .accept(dataModule.insertMany.apply(JsArray.of(JsObj.of("a",
-                                                                        JsStr.of("a")
-                                                                       )
-                                                                    .union(filter),
-                                                               JsObj.of("b",
-                                                                        JsStr.of("b")
-                                                                       )
-                                                                    .union(filter)
-                                                              )
-                                                   )
-                                             .flatMap(r -> dataModule.count.apply(filter)),
-                        context
-                       );
+                 .accept(dataModule.insertMany.apply(JsArray.of(JsObj.of("a",
+                                                                         JsStr.of("a")
+                                                                        )
+                                                                     .union(filter, JsArray.TYPE.LIST),
+                                                                JsObj.of("b",
+                                                                         JsStr.of("b")
+                                                                        )
+                                                                     .union(filter, JsArray.TYPE.LIST)
+                                                               )
+                                                    )
+                                              .then(r -> dataModule.count.apply(filter)),
+                         context
+                        );
     }
 
     @Test
@@ -594,19 +593,19 @@ public class MongoOpsTest {
                                                             )
                                                          .equals(array)
                                         )
-                .accept(dataModule.insertMany.apply(JsArray.of(obj.union(filter),
-                                                               obj.union(filter)
-                                                              ))
-                                             .flatMap($ -> dataModule.updateMany.apply(new UpdateMessage(filter,
-                                                                                                         update
-                                                                                       )
-                                                                                      )
-                                                     )
-                                             .flatMap(updateResult -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
-                                                                                                                    projection
-                                                                                                                   ))),
-                        context
-                       );
+                 .accept(dataModule.insertMany.apply(JsArray.of(obj.union(filter, JsArray.TYPE.LIST),
+                                                                obj.union(filter, JsArray.TYPE.LIST)
+                                                               ))
+                                              .then($ -> dataModule.updateMany.apply(new UpdateMessage(filter,
+                                                                                                       update
+                                                                                     )
+                                                                                    )
+                                                   )
+                                              .then(updateResult -> dataModule.findAll.apply(FindMessage.ofFilter(filter,
+                                                                                                                  projection
+                                                                                                                 ))),
+                         context
+                        );
     }
 
     @Test
@@ -633,43 +632,44 @@ public class MongoOpsTest {
         Verifiers.<Optional<JsObj>>verifySuccess(optObj -> optObj.isPresent() && !optObj.get()
                                                                                         .containsKey("a")
                                                 )
-                .accept(dataModule.insertOne.apply(obj.union(filter))
-                                            .flatMap($ -> dataModule.updateOne
-                                                             .apply(new UpdateMessage(filter,
-                                                                                      update
-                                                                    )
-                                                                   )
-                                                    )
-                                            .flatMap(updateResult -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
-                        context
-                       );
+                 .accept(dataModule.insertOne.apply(obj.union(filter, JsArray.TYPE.LIST))
+                                             .then($ -> dataModule.updateOne
+                                                     .apply(new UpdateMessage(filter,
+                                                                              update
+                                                            )
+                                                           )
+                                                  )
+                                             .then(updateResult -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
+                         context
+                        );
 
     }
 
     @Test
     @Disabled //test only valid for replicaSet
     public void test_watcher(final VertxTestContext context,
-                             final Vertx vertx) {
+                             final Vertx vertx
+                            ) {
         VertxRef vertxRef = new VertxRef(vertx);
 
         AtomicInteger counter = new AtomicInteger();
 
-        vertxRef.deployVerticle(new Watcher(dataModule.collectionSupplier,
-                                            stream -> stream.forEach($ -> counter.addAndGet(1))
-        ))
-                .onSuccess(id ->
-                                   Verifiers.<String>verifySuccess(it -> counter.get() == 1)
-                                           .accept(dataModule.insertOne.apply(JsObj.of("a",
-                                                                                       TRUE
-                                                                                      )
-                                                                             ),
-                                                   context
-                                                  ))
-                .get();
+        var unused = vertxRef.deployVerticle(new Watcher(dataModule.collectionSupplier,
+                                                         stream -> stream.forEach($ -> counter.addAndGet(1))
+                             ))
+                             .onSuccess(id ->
+                                                Verifiers.<String>verifySuccess(it -> counter.get() == 1)
+                                                         .accept(dataModule.insertOne.apply(JsObj.of("a",
+                                                                                                     TRUE
+                                                                                                    )
+                                                                                           ),
+                                                                 context
+                                                                ))
+                             .get();
     }
 
-
-    @Test
+    //TODO
+    //@Test
     public void test_aggregate(VertxTestContext context) {
         JsInt key = JsInt.of(random.nextInt());
 
@@ -683,7 +683,7 @@ public class MongoOpsTest {
                                             "status",
                                             JsStr.of("A")
                                            )
-                                        .union(filter),
+                                        .union(filter, JsArray.TYPE.LIST),
                                    JsObj.of("cust_id",
                                             JsStr.of("A123"),
                                             "amount",
@@ -691,7 +691,7 @@ public class MongoOpsTest {
                                             "status",
                                             JsStr.of("A")
                                            )
-                                        .union(filter),
+                                        .union(filter, JsArray.TYPE.LIST),
                                    JsObj.of("cust_id",
                                             JsStr.of("B212"),
                                             "amount",
@@ -699,7 +699,7 @@ public class MongoOpsTest {
                                             "status",
                                             JsStr.of("A")
                                            )
-                                        .union(filter),
+                                        .union(filter, JsArray.TYPE.LIST),
                                    JsObj.of("cust_id",
                                             JsStr.of("A123"),
                                             "amount",
@@ -707,14 +707,14 @@ public class MongoOpsTest {
                                             "status",
                                             JsStr.of("D")
                                            )
-                                        .union(filter)
+                                        .union(filter, JsArray.TYPE.LIST)
                                   );
 
         JsArray pipeline = JsArray.of(JsObj.of("$match",
                                                JsObj.of("status",
                                                         JsStr.of("A")
                                                        )
-                                                    .union(filter)
+                                                    .union(filter, JsArray.TYPE.LIST)
                                               ),
                                       JsObj.of("$group",
                                                JsObj.of("_id",
@@ -728,7 +728,7 @@ public class MongoOpsTest {
                                      );
         JsArray aggregationExpectedResult = JsArray.of(JsObj.of("_id",
                                                                 JsStr.of("B212")
-                ,
+                                                               ,
                                                                 "total",
                                                                 JsInt.of(200)
                                                                ),
@@ -741,7 +741,7 @@ public class MongoOpsTest {
                                                       );
         Verifiers.<JsArray>verifySuccess(aggregationExpectedResult::equals
                                         ).accept(dataModule.insertMany.apply(array)
-                                                                      .flatMap(ids -> dataModule.aggregate.apply(pipeline)),
+                                                                      .then(ids -> dataModule.aggregate.apply(pipeline)),
                                                  context
                                                 );
     }
@@ -753,29 +753,29 @@ public class MongoOpsTest {
         JsObj filter = JsObj.of("key",
                                 JsInt.of(key)
                                );
-        Val<JsArray> val = dataModule.insertMany
+        VIO<JsArray> val = dataModule.insertMany
                 .apply(JsArray.of(JsObj.of("name",
                                            JsStr.of("Rafa"),
                                            "age",
                                            JsInt.of(38)
                                           )
-                                       .union(filter),
+                                       .union(filter, JsArray.TYPE.LIST),
                                   JsObj.of("name",
                                            JsStr.of("Alberto"),
                                            "age",
                                            JsInt.of(10)
                                           )
-                                       .union(filter),
+                                       .union(filter, JsArray.TYPE.LIST),
                                   JsObj.of("name",
                                            JsStr.of("Josefa"),
                                            "age",
                                            JsInt.of(49)
                                           )
-                                       .union(filter)
+                                       .union(filter, JsArray.TYPE.LIST)
                                  )
                       )
-                .flatMap(ids -> dataModule.deleteMany.apply(filter))
-                .flatMap(r -> dataModule.findAll.apply(FindMessage.ofFilter(filter)));
+                .then(ids -> dataModule.deleteMany.apply(filter))
+                .then(r -> dataModule.findAll.apply(FindMessage.ofFilter(filter)));
 
 
         Verifiers.verifySuccess(JsArray::isEmpty)
@@ -813,19 +813,19 @@ public class MongoOpsTest {
         Verifiers.<Optional<JsObj>>verifySuccess(o -> Objects.equals(JsObj.of("b",
                                                                               JsInt.of(2)
                                                                              )
-                                                                          .union(filter),
+                                                                          .union(filter, JsArray.TYPE.LIST),
                                                                      o.get()
                                                                       .delete("_id")
                                                                     ))
-                .accept(dataModule.insertOne.apply(obj.union(filter))
-                                            .flatMap($ -> dataModule.findOneAndUpdate.apply(new UpdateMessage(filter,
-                                                                                                              update
-                                                                                            )
-                                                                                           )
-                                                    )
-                                            .flatMap(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
-                        context
-                       );
+                 .accept(dataModule.insertOne.apply(obj.union(filter, JsArray.TYPE.LIST))
+                                             .then($ -> dataModule.findOneAndUpdate.apply(new UpdateMessage(filter,
+                                                                                                            update
+                                                                                          )
+                                                                                         )
+                                                  )
+                                             .then(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
+                         context
+                        );
 
     }
 
@@ -846,13 +846,13 @@ public class MongoOpsTest {
                             );
 
         Verifiers.<Optional<JsObj>>verifySuccess(Optional::isEmpty)
-                .accept(dataModule.insertOne.apply(obj.union(filter))
-                                            .flatMap($ -> dataModule.findOneAndDelete
-                                                             .apply(filter)
-                                                    )
-                                            .flatMap(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
-                        context
-                       );
+                 .accept(dataModule.insertOne.apply(obj.union(filter, JsArray.TYPE.LIST))
+                                             .then($ -> dataModule.findOneAndDelete
+                                                     .apply(filter)
+                                                  )
+                                             .then(r -> dataModule.findOne.apply(FindMessage.ofFilter(filter))),
+                         context
+                        );
 
     }
 

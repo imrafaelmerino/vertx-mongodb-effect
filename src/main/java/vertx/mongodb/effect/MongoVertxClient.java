@@ -16,29 +16,14 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public class MongoVertxClient extends AbstractVerticle {
+public final class MongoVertxClient extends AbstractVerticle {
 
 
+    private final MongoClientSettings settings;
     public Function<String, MongoDatabase> getDatabase;
-
-    public final Supplier<MongoCollection<JsObj>> getCollection(String db,
-                                                                String collectionName) {
-        return () -> {
-            if(getDatabase==null)
-                throw new NullPointerException("getDatabase function is null. Did you deploy the MongoVertxClient verticle?!");
-            MongoDatabase database = getDatabase.apply(requireNonNull(db));
-            return requireNonNull(this.getCollectionFromMongoDB)
-                    .apply(database)
-                    .apply(requireNonNull(collectionName));
-        };
-    }
-
-    @SuppressWarnings({"squid:S3077"})//read effective java sonar guys
     private volatile MongoClient mongoClient;
 
     private Function<MongoDatabase, Function<String, MongoCollection<JsObj>>> getCollectionFromMongoDB;
-
-    private final MongoClientSettings settings;
 
     public MongoVertxClient(final MongoClientSettings settings) {
         this.settings = requireNonNull(settings);
@@ -54,6 +39,19 @@ public class MongoVertxClient extends AbstractVerticle {
                                            .build();
     }
 
+    public Supplier<MongoCollection<JsObj>> getCollection(String db,
+                                                          String collectionName
+                                                         ) {
+        return () -> {
+            if (getDatabase == null)
+                throw new NullPointerException("getDatabase function is null. Did you deploy the MongoVertxClient verticle?!");
+            MongoDatabase database = getDatabase.apply(requireNonNull(db));
+            return requireNonNull(this.getCollectionFromMongoDB)
+                    .apply(database)
+                    .apply(requireNonNull(collectionName));
+        };
+    }
+
     @Override
     public void start(final Promise<Void> startPromise) {
         MongoClient result = mongoClient;
@@ -66,19 +64,17 @@ public class MongoVertxClient extends AbstractVerticle {
                         getCollectionFromMongoDB =
                                 db -> name -> requireNonNull(db).getCollection(requireNonNull(name),
                                                                                JsObj.class
-                                );
+                                                                              );
                         startPromise.complete();
                     } catch (Exception error) {
                         startPromise.fail(error);
                     }
-                }
-                else {
+                } else {
                     result = mongoClient;
                     startPromise.complete();
                 }
             }
-        }
-        else startPromise.complete();
+        } else startPromise.complete();
     }
 
 

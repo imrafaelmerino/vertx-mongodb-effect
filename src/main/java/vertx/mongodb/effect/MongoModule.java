@@ -15,15 +15,16 @@ public abstract class MongoModule extends VertxModule {
     public final Supplier<MongoCollection<JsObj>> collectionSupplier;
 
     /**
-     Creates a new mongo module. The given deploymentOptions instances and worker options are  overwritten to one and
-     true respectively.
-     @param collectionSupplier the mongo collection supplier
-     @param deploymentOptions the verticles deployment options
+     * Creates a new mongo module. The given deploymentOptions instances and worker options are  overwritten to one and
+     * true respectively.
+     *
+     * @param collectionSupplier the mongo collection supplier
+     * @param deploymentOptions  the verticles deployment options
      */
     public MongoModule(final Supplier<MongoCollection<JsObj>> collectionSupplier,
                        final DeploymentOptions deploymentOptions
-                       ) {
-        super(deploymentOptions.setWorker(true));
+                      ) {
+        super(deploymentOptions);
         this.collectionSupplier = requireNonNull(collectionSupplier);
     }
 
@@ -31,8 +32,6 @@ public abstract class MongoModule extends VertxModule {
         super(DEFAULT_DEPLOYMENT_OPTIONS);
         this.collectionSupplier = requireNonNull(collectionSupplier);
     }
-
-
 
 
 }
